@@ -1,0 +1,206 @@
+import streamlit as st
+import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
+
+st.set_page_config(
+    page_title="Production Scheduling · LPT Optimizer",
+    page_icon="⏳",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
+# ─── Custom CSS (Matching Style - Deep Blue & Slate Theme for LPT) ───────────
+st.markdown("""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+
+html, body, [class*="css"] { font-family: 'DM Sans', sans-serif; }
+.stApp { background: #F4F7F9; }
+[data-testid="stSidebar"] { background: #1E293B !important; border-right: 1px solid #334155; }
+[data-testid="stSidebar"] * { color: #E2E8F0 !important; }
+[data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3 { color: #F8FAFC !important; }
+
+.hero-banner {
+    background: linear-gradient(135deg, #1E293B 0%, #334155 55%, #0EA5E9 100%);
+    border-radius: 16px; padding: 36px 40px; margin-bottom: 28px;
+}
+.hero-title { font-size: 28px; font-weight: 600; color: #F8FAFC; margin: 0 0 6px; }
+.hero-sub { font-size: 14px; color: #CBD5E1; margin: 0; }
+
+.metric-card {
+    background: white; border-radius: 12px; padding: 18px 20px;
+    border: 1px solid #E2E8F0; box-shadow: 0 1px 6px rgba(30,41,59,0.05);
+}
+.metric-card.blue { border-top: 3px solid #0EA5E9; }
+.metric-card.slate { border-top: 3px solid #64748B; }
+.metric-card.coral { border-top: 3px solid #F43F5E; }
+
+.metric-label { font-size: 11px; font-weight: 600; color: #64748B; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; }
+.metric-value { font-size: 24px; font-weight: 600; color: #1E293B; font-family: 'DM Mono', monospace; }
+.metric-sub { font-size: 11px; color: #64748B; margin-top: 3px; }
+
+.section-header { display: flex; align-items: center; gap: 10px; margin: 24px 0 14px; }
+.section-title { font-size: 16px; font-weight: 600; color: #1E293B; }
+.info-box { background: #F0FDF4; border-left: 4px solid #22C55E; border-radius: 0 8px 8px 0; padding: 12px 16px; margin-bottom: 20px; font-size: 13px; color: #166534; }
+hr { border-color: #E2E8F0 !important; }
+</style>
+""", unsafe_allow_html=True)
+
+# ─── Sidebar Input ────────────────────────────────────────────────────────────
+with st.sidebar:
+    st.markdown("""
+    <div style='padding: 20px 0 16px'>
+        <div style='font-size:22px; font-weight:700; color:#F8FAFC;'>LPT Scheduler</div>
+        <div style='font-size:12px; color:#94A3B8; margin-top:3px'>Longest Processing Time Rule</div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown("<hr>", unsafe_allow_html=True)
+    st.write("⏳ **Aturan LPT:** Pekerjaan dengan waktu proses **terpanjang** akan dijadwalkan terlebih dahulu. Aturan ini sangat baik untuk mengidentifikasi beban kerja besar di awal atau mendistribusikan tugas pada beberapa mesin (Parallel Machines).")
+
+# ─── Hero Banner ──────────────────────────────────────────────────────────────
+st.markdown("""
+<div class="hero-banner">
+    <div class="hero-title">⏳ Longest Processing Time (LPT) Dashboard</div>
+    <div class="hero-sub">Optimasi urutan penjadwalan job tunggal (Single Machine Scheduling) berdasarkan prioritas waktu terlama</div>
+</div>
+""", unsafe_allow_html=True)
+
+# ─── Data Input Section ───────────────────────────────────────────────────────
+st.markdown("""
+<div class="section-header">
+    <div class="section-title">📂 Input Data Job (Pekerjaan)</div>
+</div>
+""", unsafe_allow_html=True)
+
+st.markdown("""
+<div class="info-box">
+    💡 <b>Petunjuk:</b> Isikan daftar pekerjaan, waktu proses (Processing Time), dan batas waktu penyelesaian (Due Date). 
+    Anda bisa menambah baris baru di bagian bawah tabel. Aturan LPT akan otomatis mengurutkan dari waktu terlama.
+</div>
+""", unsafe_allow_html=True)
+
+# Default baseline data
+init_data = pd.DataFrame([
+    {"Job_Name": "Job A", "Processing_Time": 5, "Due_Date": 10},
+    {"Job_Name": "Job B", "Processing_Time": 2, "Due_Date": 6},
+    {"Job_Name": "Job C", "Processing_Time": 8, "Due_Date": 15},
+    {"Job_Name": "Job D", "Processing_Time": 3, "Due_Date": 8},
+])
+
+edited_df = st.data_editor(
+    init_data,
+    num_rows="dynamic",
+    use_container_width=True,
+    column_config={
+        "Job_Name": st.column_config.TextColumn("Nama Job / Pekerjaan", required=True),
+        "Processing_Time": st.column_config.NumberColumn("Processing Time (Jam/Hari)", min_value=1, step=1, format="%d"),
+        "Due_Date": st.column_config.NumberColumn("Due Date (Batas Waktu)", min_value=1, step=1, format="%d")
+    }
+)
+
+if st.button("▶ Hitung Penjadwalan LPT", type="primary"):
+    if edited_df is not None and len(edited_df) > 0:
+        df_jobs = edited_df.dropna().copy()
+        
+        # ─── LPT Calculation Logic (Ascending=False) ──────────────────────────
+        df_lpt = df_jobs.sort_values(by="Processing_Time", ascending=False).reset_index(drop=True)
+        
+        start_times = []
+        comp_times = []
+        current_time = 0
+        
+        for idx, row in df_lpt.iterrows():
+            start_times.append(current_time)
+            current_time += int(row["Processing_Time"])
+            comp_times.append(current_time)
+            
+        df_lpt["Start_Time"] = start_times
+        df_lpt["Completion_Time"] = comp_times
+        
+        df_lpt["Lateness"] = df_lpt["Completion_Time"] - df_lpt["Due_Date"]
+        df_lpt["Tardiness"] = df_lpt["Lateness"].apply(lambda x: max(0, x))
+        
+        # ─── Hitung Metrik Performa ───────────────────────────────────────────
+        mean_flow_time = df_lpt["Completion_Time"].mean()
+        max_tardiness = df_lpt["Tardiness"].max()
+        mean_tardiness = df_lpt["Tardiness"].mean()
+        num_tardy_jobs = sum(df_lpt["Tardiness"] > 0)
+        
+        # ─── METRIC CARDS ─────────────────────────────────────────────────────
+        st.markdown("""<div class="section-header"><div class="section-title">📊 Performa Penjadwalan LPT</div></div>""", unsafe_allow_html=True)
+        
+        m1, m2, m3, m4 = st.columns(4)
+        with m1:
+            st.markdown(f"""<div class="metric-card blue"><div class="metric-label">Mean Flow Time</div><div class="metric-value">{mean_flow_time:.2f}</div><div class="metric-sub">Rata-rata waktu alir job</div></div>""", unsafe_allow_html=True)
+        with m2:
+            st.markdown(f"""<div class="metric-card slate"><div class="metric-label">Mean Tardiness</div><div class="metric-value">{mean_tardiness:.2f}</div><div class="metric-sub">Rata-rata keterlambatan</div></div>""", unsafe_allow_html=True)
+        with m3:
+            st.markdown(f"""<div class="metric-card coral"><div class="metric-label">Max Tardiness</div><div class="metric-value">{max_tardiness}</div><div class="metric-sub">Keterlambatan maksimal</div></div>""", unsafe_allow_html=True)
+        with m4:
+            st.markdown(f"""<div class="metric-card blue"><div class="metric-label">Tardy Jobs</div><div class="metric-value">{num_tardy_jobs} / {len(df_lpt)}</div><div class="metric-sub">Jumlah job yang terlambat</div></div>""", unsafe_allow_html=True)
+            
+        st.markdown("<br>", unsafe_allow_html=True)
+        
+        # ─── TABEL HASIL URUTAN LPT ───────────────────────────────────────────
+        st.markdown("**Urutan Pengerjaan Hasil Optimasi LPT (Berdasarkan Waktu Terlama)**")
+        
+        df_lpt["Sequence"] = [f"Urutan {i+1}" for i in range(len(df_lpt))]
+        df_display = df_lpt.set_index("Sequence")[["Job_Name", "Processing_Time", "Due_Date", "Start_Time", "Completion_Time", "Lateness", "Tardiness"]]
+        
+        st.dataframe(
+            df_display.style
+            .map(lambda x: "background-color: #E0F2FE; color: #0369A1;" if x > 0 else "", subset=["Processing_Time"])
+            .map(lambda x: "color: #DC2626; font-weight: bold;" if x > 0 else "color: #16A34A;", subset=["Tardiness"]),
+            use_container_width=True
+        )
+        
+        st.markdown("<hr>", unsafe_allow_html=True)
+        
+        # ─── VISUALISASI CHART ────────────────────────────────────────────────
+        st.markdown("""<div class="section-header"><div class="section-title">📈 Visualisasi Penjadwalan</div></div>""", unsafe_allow_html=True)
+        
+        c1, c2 = st.columns(2, gap="large")
+        
+        with c1:
+            fig_gantt = go.Figure()
+            for idx, row in df_lpt.iterrows():
+                fig_gantt.add_trace(go.Bar(
+                    x=[row["Processing_Time"]],
+                    y=["Mesin Tunggal"],
+                    base=[row["Start_Time"]],
+                    orientation='h',
+                    name=row["Job_Name"],
+                    text=f"{row['Job_Name']} ({row['Processing_Time']})",
+                    textposition='inside',
+                    marker=dict(line=dict(color='white', width=1))
+                ))
+            
+            fig_gantt.update_layout(
+                title="Gantt Chart Urutan Pengerjaan LPT (Timeline)",
+                barmode='stack',
+                height=300,
+                plot_bgcolor="white",
+                showlegend=False,
+                xaxis=dict(title="Waktu (Jam/Hari)", gridcolor="#E2E8F0")
+            )
+            st.plotly_chart(fig_gantt, use_container_width=True)
+            
+        with c2:
+            fig_comp = go.Figure()
+            fig_comp.add_bar(x=df_lpt["Job_Name"], y=df_lpt["Due_Date"], name="Due Date", marker_color="#94A3B8")
+            fig_comp.add_bar(x=df_lpt["Job_Name"], y=df_lpt["Completion_Time"], name="Completion Time", marker_color="#0EA5E9")
+            
+            fig_comp.update_layout(
+                title="Perbandingan Batas Waktu (Due Date) vs Waktu Selesai",
+                barmode="group",
+                height=300,
+                plot_bgcolor="white",
+                xaxis=dict(gridcolor="#E2E8F0"),
+                yaxis=dict(gridcolor="#E2E8F0")
+            )
+            st.plotly_chart(fig_comp, use_container_width=True)
+            
+    else:
+        st.warning("Silakan masukkan data pekerjaan terlebih dahulu pada tabel.")
