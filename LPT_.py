@@ -10,40 +10,117 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# ─── Custom CSS (Matching Style - Deep Blue & Slate Theme for LPT) ───────────
+# ─── Custom CSS (Soft Pastel — Mint · Sky · Peach Theme) ─────────────────────
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
 
-html, body, [class*="css"] { font-family: 'DM Sans', sans-serif; }
-.stApp { background: #F4F7F9; }
-[data-testid="stSidebar"] { background: #1E293B !important; border-right: 1px solid #334155; }
-[data-testid="stSidebar"] * { color: #E2E8F0 !important; }
-[data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3 { color: #F8FAFC !important; }
+/* ── Base ── */
+html, body, [class*="css"] { font-family: 'Nunito', sans-serif; }
+.stApp { background: #FDF6F0; }
 
+/* ── Sidebar ── */
+[data-testid="stSidebar"] {
+    background: linear-gradient(180deg, #B2D8C8 0%, #C8D8E8 60%, #E8C4A8 100%) !important;
+    border-right: 1px solid #D4C0B0;
+}
+[data-testid="stSidebar"] * { color: #5A4A42 !important; }
+[data-testid="stSidebar"] h1,
+[data-testid="stSidebar"] h2,
+[data-testid="stSidebar"] h3 { color: #3D2E28 !important; }
+[data-testid="stSidebar"] .stMarkdown p { color: #5A4A42 !important; }
+
+/* ── Hero Banner ── */
 .hero-banner {
-    background: linear-gradient(135deg, #1E293B 0%, #334155 55%, #0EA5E9 100%);
-    border-radius: 16px; padding: 36px 40px; margin-bottom: 28px;
+    background: linear-gradient(135deg, #7FBFAD 0%, #A8C4D4 50%, #E8A882 100%);
+    border-radius: 20px;
+    padding: 38px 44px;
+    margin-bottom: 28px;
+    box-shadow: 0 4px 20px rgba(180,140,120,0.18);
+    position: relative;
+    overflow: hidden;
 }
-.hero-title { font-size: 28px; font-weight: 600; color: #F8FAFC; margin: 0 0 6px; }
-.hero-sub { font-size: 14px; color: #CBD5E1; margin: 0; }
+.hero-banner::before {
+    content: '';
+    position: absolute;
+    top: -40px; right: -40px;
+    width: 180px; height: 180px;
+    background: rgba(255,255,255,0.12);
+    border-radius: 50%;
+}
+.hero-banner::after {
+    content: '';
+    position: absolute;
+    bottom: -30px; left: 120px;
+    width: 100px; height: 100px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 50%;
+}
+.hero-title { font-size: 28px; font-weight: 700; color: #fff; margin: 0 0 8px; text-shadow: 0 1px 4px rgba(0,0,0,0.12); }
+.hero-sub { font-size: 14px; color: rgba(255,255,255,0.88); margin: 0; font-weight: 400; }
 
+/* ── Metric Cards ── */
 .metric-card {
-    background: white; border-radius: 12px; padding: 18px 20px;
-    border: 1px solid #E2E8F0; box-shadow: 0 1px 6px rgba(30,41,59,0.05);
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 20px 22px;
+    border: 1.5px solid #EDD8CC;
+    box-shadow: 0 2px 10px rgba(200,160,130,0.10);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
-.metric-card.blue { border-top: 3px solid #0EA5E9; }
-.metric-card.slate { border-top: 3px solid #64748B; }
-.metric-card.coral { border-top: 3px solid #F43F5E; }
+.metric-card:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(200,160,130,0.18); }
+.metric-card.blue  { border-top: 4px solid #7FBFAD; }   /* sage mint  */
+.metric-card.slate { border-top: 4px solid #A8C4D4; }   /* soft sky   */
+.metric-card.coral { border-top: 4px solid #E8A882; }   /* warm peach */
 
-.metric-label { font-size: 11px; font-weight: 600; color: #64748B; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; }
-.metric-value { font-size: 24px; font-weight: 600; color: #1E293B; font-family: 'DM Mono', monospace; }
-.metric-sub { font-size: 11px; color: #64748B; margin-top: 3px; }
+.metric-label {
+    font-size: 10px; font-weight: 700; color: #B08070;
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;
+}
+.metric-value {
+    font-size: 26px; font-weight: 700;
+    color: #5A3E35;
+    font-family: 'DM Mono', monospace;
+}
+.metric-sub { font-size: 11px; color: #B08070; margin-top: 4px; }
 
-.section-header { display: flex; align-items: center; gap: 10px; margin: 24px 0 14px; }
-.section-title { font-size: 16px; font-weight: 600; color: #1E293B; }
-.info-box { background: #F0FDF4; border-left: 4px solid #22C55E; border-radius: 0 8px 8px 0; padding: 12px 16px; margin-bottom: 20px; font-size: 13px; color: #166534; }
-hr { border-color: #E2E8F0 !important; }
+/* ── Section Headers ── */
+.section-header { display: flex; align-items: center; gap: 10px; margin: 28px 0 14px; }
+.section-title {
+    font-size: 15px; font-weight: 700; color: #5A3E35;
+    padding-left: 10px;
+    border-left: 3px solid #7FBFAD;
+}
+
+/* ── Info Box ── */
+.info-box {
+    background: linear-gradient(90deg, #E8F5F0 0%, #F5EEE8 100%);
+    border-left: 4px solid #7FBFAD;
+    border-radius: 0 12px 12px 0;
+    padding: 14px 18px;
+    margin-bottom: 20px;
+    font-size: 13px;
+    color: #5A4A42;
+}
+
+/* ── Divider ── */
+hr { border-color: #EDD8CC !important; }
+
+/* ── Button override ── */
+.stButton > button[kind="primary"] {
+    background: linear-gradient(135deg, #7FBFAD 0%, #A8C4D4 100%) !important;
+    border: none !important;
+    border-radius: 10px !important;
+    color: white !important;
+    font-weight: 600 !important;
+    padding: 10px 28px !important;
+    box-shadow: 0 3px 12px rgba(127,191,173,0.35) !important;
+    transition: opacity 0.2s ease !important;
+}
+.stButton > button[kind="primary"]:hover { opacity: 0.88 !important; }
+
+/* ── Dataframe tweaks ── */
+[data-testid="stDataFrame"] { border-radius: 12px; overflow: hidden; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -51,8 +128,8 @@ hr { border-color: #E2E8F0 !important; }
 with st.sidebar:
     st.markdown("""
     <div style='padding: 20px 0 16px'>
-        <div style='font-size:22px; font-weight:700; color:#F8FAFC;'>LPT Scheduler</div>
-        <div style='font-size:12px; color:#94A3B8; margin-top:3px'>Longest Processing Time Rule</div>
+        <div style='font-size:22px; font-weight:700; color:#3D2E28;'>⏳ LPT Scheduler</div>
+        <div style='font-size:12px; color:#7A5A50; margin-top:3px'>Longest Processing Time Rule</div>
     </div>
     """, unsafe_allow_html=True)
     
@@ -178,27 +255,32 @@ if st.button("▶ Hitung Penjadwalan LPT", type="primary"):
                 ))
             
             fig_gantt.update_layout(
-                title="Gantt Chart Urutan Pengerjaan LPT (Timeline)",
+                title=dict(text="Gantt Chart Urutan Pengerjaan LPT (Timeline)", font=dict(family="Nunito", color="#5A3E35")),
                 barmode='stack',
                 height=300,
-                plot_bgcolor="white",
+                plot_bgcolor="#FDF6F0",
+                paper_bgcolor="white",
                 showlegend=False,
-                xaxis=dict(title="Waktu (Jam/Hari)", gridcolor="#E2E8F0")
+                xaxis=dict(title="Waktu (Jam/Hari)", gridcolor="#EDD8CC", color="#B08070"),
+                yaxis=dict(color="#B08070"),
+                colorway=["#7FBFAD", "#A8C4D4", "#E8A882", "#C8A8B8", "#D4C4A0"]
             )
             st.plotly_chart(fig_gantt, use_container_width=True)
             
         with c2:
             fig_comp = go.Figure()
-            fig_comp.add_bar(x=df_lpt["Job_Name"], y=df_lpt["Due_Date"], name="Due Date", marker_color="#94A3B8")
-            fig_comp.add_bar(x=df_lpt["Job_Name"], y=df_lpt["Completion_Time"], name="Completion Time", marker_color="#0EA5E9")
+            fig_comp.add_bar(x=df_lpt["Job_Name"], y=df_lpt["Due_Date"], name="Due Date", marker_color="#C8D8E8")
+            fig_comp.add_bar(x=df_lpt["Job_Name"], y=df_lpt["Completion_Time"], name="Completion Time", marker_color="#E8A882")
             
             fig_comp.update_layout(
-                title="Perbandingan Batas Waktu (Due Date) vs Waktu Selesai",
+                title=dict(text="Perbandingan Batas Waktu (Due Date) vs Waktu Selesai", font=dict(family="Nunito", color="#5A3E35")),
                 barmode="group",
                 height=300,
-                plot_bgcolor="white",
-                xaxis=dict(gridcolor="#E2E8F0"),
-                yaxis=dict(gridcolor="#E2E8F0")
+                plot_bgcolor="#FDF6F0",
+                paper_bgcolor="white",
+                xaxis=dict(gridcolor="#EDD8CC", color="#B08070"),
+                yaxis=dict(gridcolor="#EDD8CC", color="#B08070"),
+                legend=dict(font=dict(color="#5A3E35"))
             )
             st.plotly_chart(fig_comp, use_container_width=True)
             
